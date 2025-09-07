@@ -55,7 +55,7 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* カスタムスライダーのスタイル */
+        /* Custom slider styles */
         .volume-slider-track {
             -webkit-appearance: none;
             appearance: none;
@@ -64,13 +64,14 @@
             background: #4A4A4A;
             border-radius: 5px;
             outline: none;
+            cursor: pointer;
         }
         .volume-slider-track::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
             width: 20px;
             height: 20px;
-            background: #6366F1;
+            background: #6366F1; /* Default color */
             cursor: pointer;
             border-radius: 50%;
             border: 2px solid white;
@@ -78,13 +79,13 @@
         .volume-slider-track::-moz-range-thumb {
             width: 20px;
             height: 20px;
-            background: #6366F1;
+            background: #6366F1; /* Default color */
             cursor: pointer;
             border-radius: 50%;
             border: 2px solid white;
         }
-
-        /* シークバーのスタイル */
+        
+        /* Seek bar style */
         .slider-thumb::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
@@ -103,7 +104,6 @@
             border-radius: 50%;
             border: 2px solid white;
         }
-
         .modal {
             position: fixed;
             z-index: 100;
@@ -191,8 +191,8 @@
                         目標音量 (LUFS)
                     </label>
                     <div class="flex items-center space-x-4">
-                        <input type="range" id="target-volume" min="-30" max="18" value="-14" step="1"
-                               class="flex-1 h-2 bg-gray-600 rounded-lg volume-slider-track">
+                        <input type="range" id="target-volume" min="-30" max="0" value="-14" step="1"
+                               class="flex-1 volume-slider-track">
                         <span id="volume-value" class="w-12 text-center text-gray-300">-14</span>
                     </div>
                     <p class="text-xs text-gray-500 mt-1">
@@ -255,7 +255,7 @@
                 <div id="message-spinner" class="spinner mx-auto hidden"></div>
                 <h3 id="message-title" class="text-xl font-bold text-indigo-400"></h3>
                 <p id="message-text" class="text-gray-300"></p>
-                <!-- 進捗バーをここへ移動 -->
+                <!-- Progress bar moved here -->
                 <div id="overall-progress-container" class="mt-4 hidden">
                     <p id="overall-progress-text" class="text-sm mb-1 text-gray-400">
                         全体の進捗: 0%
@@ -314,7 +314,7 @@
     let currentAudio = null;
     let playingButtonId = null;
 
-    // 仕様書の内容を直接コード内に記述
+    // Spec content is written directly in the code
     const specMarkdown = `
 # オーディオ正規化ツール 仕様書
 
@@ -325,7 +325,7 @@
 * **ドラッグ＆ドロップ**: オーディオファイルをツールに直接ドラッグ＆ドロップしてアップロードできます。
 * **複数ファイル対応**: 一度に複数のファイルを処理できます。
 * **音量正規化**: 音量を指定した**LUFS**（Loudness Units Full Scale）レベルに正規化します。
-    * **推奨値**: -14 LUFSは一般的なストリーミングサービスで推奨される音量レベルです。
+    * **推奨値**: 一般的なストリーミングサービスで推奨される音量レベルは**-14 LUFS**です。
 * **出力フォーマット**:
     * **WAV**: 高音質で非圧縮のWAV形式で出力します。
     * **MP3**: 圧縮されたMP3形式で出力します。
@@ -333,6 +333,12 @@
 * **一括ダウンロード**: 処理が完了したすべてのファイルをZIPファイルとして一括でダウンロードできます。
 * **リアルタイム進捗表示**: ファイルごとの処理状況と全体の進捗がリアルタイムで表示されます。
 * **リアルタイム再生**: 処理が完了したファイルをすぐにプレビュー再生できます。
+* **スライダーの視覚化**: 目標音量が**-13 LUFS**以上の場合、スライダーのバーの色が変わり、視覚的に重要な音量レベルであることを示します。
+
+## デザイン
+* **視覚的なテーマ**: ダークモードを基調とし、目が疲れにくい配色を採用。
+* **レイアウト**: ドラッグ＆ドロップエリア、設定パネル、ファイルリストが明確に分かれており、直感的な操作が可能。
+* **アイコン**: ボタンには、機能を視覚的に示すアイコンが使われています。
 
 ## 使用技術
 * **フロントエンド**: HTML, CSS (Tailwind CSS), JavaScript
@@ -345,7 +351,7 @@
 * ブラウザがWeb Audio APIをサポートしている必要があります。
     `;
 
-    // カスタムメッセージボックスを表示するユーティリティ関数
+    // Utility function to display a custom message box
     function showMessageBox(title, text, showSpinner = false) {
         messageTitle.textContent = title;
         messageText.textContent = text;
@@ -375,7 +381,7 @@
     dragArea.addEventListener('drop', (e) => {
         e.preventDefault();
         dragArea.classList.remove('active');
-        handleFiles(e.dataTransfer.files, true); // true を渡してファイルを追加
+        handleFiles(e.dataTransfer.files, true); // Pass true to append files
     });
 
     // Handle file input click
@@ -384,37 +390,55 @@
     });
 
     fileInput.addEventListener('change', (e) => {
-        handleFiles(e.target.files, true); // true を渡してファイルを追加
+        handleFiles(e.target.files, true); // Pass true to append files
     });
 
-    // Update volume value and bar color on slider change
+    // Function to update the slider's appearance
     function updateVolumeSlider() {
-        const value = targetVolumeSlider.value;
-        const min = targetVolumeSlider.min;
-        const max = targetVolumeSlider.max;
-        volumeValueSpan.textContent = value;
+      const value = parseInt(targetVolumeSlider.value, 10);
+      const min = parseInt(targetVolumeSlider.min, 10);
+      const max = parseInt(targetVolumeSlider.max, 10);
+      volumeValueSpan.textContent = value;
+      
+      const thresholdLevel = -13; // The new threshold for color change
 
-        // Calculate position of 0 LUFS relative to the full range
-        const zeroPoint = (0 - min) / (max - min) * 100;
+      let thumbColor, trackColor;
+      if (value >= thresholdLevel) {
+          thumbColor = '#a855f7'; // Purple for >= -13 LUFS
+          trackColor = '#a855f7';
+      } else {
+          thumbColor = '#6366F1'; // Indigo for < -13 LUFS
+          trackColor = '#6366F1';
+      }
+      
+      // Update custom CSS variables for thumb color
+      targetVolumeSlider.style.setProperty('--webkit-slider-thumb-background', thumbColor);
+      targetVolumeSlider.style.setProperty('--moz-range-thumb-background', thumbColor);
 
-        // Calculate current value position
-        const valuePoint = (value - min) / (max - min) * 100;
-        
-        let color1 = '#6366F1'; // Indigo for negative values
-        let color2 = '#a855f7'; // Purple for positive values
-
-        // Create the gradient for the slider track
-        if (value < 0) {
-            targetVolumeSlider.style.backgroundImage = `linear-gradient(to right, ${color1} 0%, ${color1} ${valuePoint}%, #4A4A4A ${valuePoint}%, #4A4A4A 100%)`;
-        } else {
-            targetVolumeSlider.style.backgroundImage = `linear-gradient(to right, ${color1} 0%, ${color1} ${zeroPoint}%, ${color2} ${zeroPoint}%, ${color2} ${valuePoint}%, #4A4A4A ${valuePoint}%, #4A4A4A 100%)`;
-        }
+      // Update track gradient to show progress
+      const valuePoint = (value - min) / (max - min) * 100;
+      targetVolumeSlider.style.backgroundImage = `linear-gradient(to right, ${trackColor} 0%, ${trackColor} ${valuePoint}%, #4A4A4A ${valuePoint}%, #4A4A4A 100%)`;
     }
-
-    targetVolumeSlider.addEventListener('input', updateVolumeSlider);
     
-    // Initial update for the slider color
-    document.addEventListener('DOMContentLoaded', updateVolumeSlider);
+    // Listen for slider changes
+    targetVolumeSlider.addEventListener('input', updateVolumeSlider);
+
+    // Initial update for the slider color on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        updateVolumeSlider();
+        
+        // Add dynamic styles for the slider thumb
+        const dynamicStyle = document.createElement('style');
+        dynamicStyle.innerHTML = `
+          .volume-slider-track::-webkit-slider-thumb {
+            background: var(--webkit-slider-thumb-background, #6366F1);
+          }
+          .volume-slider-track::-moz-range-thumb {
+            background: var(--moz-range-thumb-background, #6366F1);
+          }
+        `;
+        document.head.appendChild(dynamicStyle);
+    });
 
     // Toggle bitrate control visibility based on output format
     outputFormatSelect.addEventListener('change', (e) => {
@@ -437,7 +461,7 @@
             filesToProcess = [...newFiles];
         }
 
-        processedFiles = []; // 処理済みファイルをリセット
+        processedFiles = []; // Reset processed files
         renderFileList();
         processedFilesList.classList.add('hidden');
         // Clear file input to allow re-selection of the same file
@@ -681,7 +705,7 @@
             const zipBlob = await zip.generateAsync({ type: "blob" });
             const zipUrl = URL.createObjectURL(zipBlob);
             
-            // "すべてダウンロード"ボタンを動的に作成して追加
+            // Dynamically create and add the "Download All" button
             const downloadAllButton = document.createElement('a');
             downloadAllButton.id = 'download-all-button';
             downloadAllButton.className = 'bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-full transition-colors duration-300 cursor-pointer';
@@ -708,10 +732,10 @@
         }
     });
     
-    // 処理済みファイルのリストをUIに反映
+    // Update the list of processed files on the UI
     function updateFileListAfterProcessing() {
         processedFilesList.classList.remove('hidden');
-        // ヘッダーのみを保持し、リストアイテムをクリア
+        // Keep the header and clear the list items
         processedFilesList.innerHTML = `<h2 class="text-xl font-semibold mb-2 text-gray-300">
                 処理済みファイル
             </h2>`;
@@ -851,7 +875,7 @@
         const numChannels = buffer.numberOfChannels;
         const mp3encoder = new lamejs.Mp3Encoder(numChannels, sampleRate, bitrate);
         const mp3Data = [];
-        const maxSamples = 1152; // LAMEの推奨バッファサイズ
+        const maxSamples = 1152; // Recommended buffer size for LAME
 
         const leftChannel = new Int16Array(buffer.getChannelData(0).length);
         const rightChannel = (numChannels > 1) ? new Int16Array(buffer.getChannelData(1).length) : null;
@@ -899,7 +923,7 @@
     // Modal logic for spec sheet
     openSpecButton.addEventListener('click', () => {
         if (!specContentFetched) {
-            // MarkdownをHTMLに変換
+            // Convert Markdown to HTML
             const html = specMarkdown.replace(/^# (.*$)/gim, '<h1>$1</h1>')
                                      .replace(/^## (.*$)/gim, '<h2>$1</h2>')
                                      .replace(/^### (.*$)/gim, '<h3>$1</h3>')
