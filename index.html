@@ -316,10 +316,10 @@
 
     // Spec content is written directly in the code
     const specMarkdown = `
-# オーディオ正規化ツール 仕様書
+# ノーマライズサウンド仕様書
 
 ## 概要
-このツールは、複数のオーディオファイルの音量を均一化し、指定されたフォーマットで出力するWebアプリケーションです。
+このツールは、複数のオーディオファイルの音量を均一化し、指定したフォーマットで出力するWebアプリケーションです。
 
 ## 機能
 * **ドラッグ＆ドロップ**: オーディオファイルをツールに直接ドラッグ＆ドロップしてアップロードできます。
@@ -599,7 +599,7 @@
             const button = document.getElementById(buttonId);
             button.innerHTML = `
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 7h6v6H7z" />
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 7h6v6H7z" />
                 </svg>
             `;
             button.title = "停止";
