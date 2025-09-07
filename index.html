@@ -375,7 +375,7 @@
     dragArea.addEventListener('drop', (e) => {
         e.preventDefault();
         dragArea.classList.remove('active');
-        handleFiles(e.dataTransfer.files);
+        handleFiles(e.dataTransfer.files, true); // true を渡してファイルを追加
     });
 
     // Handle file input click
@@ -384,7 +384,7 @@
     });
 
     fileInput.addEventListener('change', (e) => {
-        handleFiles(e.target.files);
+        handleFiles(e.target.files, true); // true を渡してファイルを追加
     });
 
     // Update volume value and bar color on slider change
@@ -426,12 +426,22 @@
     });
 
     // Handle selected files
-    function handleFiles(files) {
+    function handleFiles(files, append = false) {
         if (files.length === 0) return;
-        filesToProcess = [...files];
+        
+        const newFiles = Array.from(files).filter(file => !filesToProcess.some(f => f.name === file.name && f.size === file.size));
+
+        if (append) {
+            filesToProcess.push(...newFiles);
+        } else {
+            filesToProcess = [...newFiles];
+        }
+
         processedFiles = []; // 処理済みファイルをリセット
         renderFileList();
         processedFilesList.classList.add('hidden');
+        // Clear file input to allow re-selection of the same file
+        fileInput.value = '';
     }
 
     // Render the file list on the UI
